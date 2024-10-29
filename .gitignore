@@ -60,3 +60,6 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# We don't want the UnsplashAuth Key to end up in source control
+UnsplashAuth.swift
