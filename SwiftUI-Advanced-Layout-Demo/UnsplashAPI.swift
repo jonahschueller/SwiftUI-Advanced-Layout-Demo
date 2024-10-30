@@ -17,10 +17,12 @@ class UnsplashAPI {
 
     }
 
-    func fetchRandomPhoto() async throws -> Photo {
-        guard let url = URL(string: "\(UNSPLASH_BASE_URL)/photos/random") else {
+    func fetchRandomPhoto(count: Int = 15) async throws -> [Photo] {
+        guard let url = URL(string: "\(UNSPLASH_BASE_URL)/photos/random?count=\(count)&orientation=portrait") else {
             throw UnsplashError.invalidURL
         }
+        
+        print("Fetching random photos from Unsplash... \(url.absoluteString)")
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -29,7 +31,7 @@ class UnsplashAPI {
                 "Client-ID \(UnsplashAuth.accessKey)",
                 forHTTPHeaderField: "Authorization"
             )
-
+        
         let (data, response) = try await URLSession.shared.data(for: request)
 
         guard
@@ -43,10 +45,11 @@ class UnsplashAPI {
         }
 
         do {
-            let photo = try JSONDecoder().decode(Photo.self, from: data)
+            let photo = try JSONDecoder().decode([Photo].self, from: data)
 
             return photo
         } catch {
+            print(error)
             throw UnsplashError.invalidData
         }
 

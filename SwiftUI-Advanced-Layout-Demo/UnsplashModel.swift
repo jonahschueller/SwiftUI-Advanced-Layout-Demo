@@ -6,14 +6,12 @@ struct Photo: Identifiable, Codable {
     let updatedAt: String
     let width: Int
     let height: Int
-    let color: String
-    let blurHash: String
-    let downloads: Int
+    let color: String?
+    let blurHash: String?
+    let downloads: Int?
     let likes: Int
-    let likedByUser: Bool
     let description: String?
-    let exif: Exif
-    let location: Location
+    let exif: UnsplashPhotoExif?
     let urls: Urls
     let links: Links
     let user: User
@@ -28,39 +26,30 @@ struct Photo: Identifiable, Codable {
         case blurHash = "blur_hash"
         case downloads
         case likes
-        case likedByUser = "liked_by_user"
         case description
         case exif
-        case location
         case urls
         case links
         case user
     }
 }
 
-struct Exif: Codable {
-    let make: String
-    let model: String
-    let exposureTime: String
-    let aperture: String
-    let focalLength: String
-    let iso: Int
+public struct UnsplashPhotoExif: Codable {
 
-    enum CodingKeys: String, CodingKey {
+    public let aperture: String?
+    public let exposureTime: String?
+    public let focalLength: String?
+    public let make: String?
+    public let model: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case aperture
+        case exposureTime = "exposure_time"
+        case focalLength = "focal_length"
         case make
         case model
-        case exposureTime = "exposure_time"
-        case aperture
-        case focalLength = "focal_length"
-        case iso
     }
-}
 
-struct Location: Codable {
-    let name: String?
-    let city: String?
-    let country: String?
-    let position: Position
 }
 
 struct Position: Codable {
