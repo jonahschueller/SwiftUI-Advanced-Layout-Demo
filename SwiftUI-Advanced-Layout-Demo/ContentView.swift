@@ -9,42 +9,61 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var unsplash = UnsplashViewModel()
-
+    @State private var scrollOffset: CGFloat = 0
 
     var body: some View {
-        VStack {
-            
-            Text("Cached Photos: \(unsplash.photos.count)")
-            
-            if let photo = unsplash.currentPhoto {
-                AsyncImage(url: URL(string: photo.urls.regular)) { image in
-                    image.resizable()
-                } placeholder: {
-                    Rectangle()
-                        
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(
+                        Array(unsplash.photos.enumerated()),
+                        id: \.offset
+                    ) { index, item in
+                        PhotoView(unsplash: unsplash, photo: item)
+                            .frame(
+                                width: UIScreen.main.bounds.width,
+                                height: UIScreen.main.bounds.height
+                            )
+                            .onAppear {
+                                // Get new photos while scrolling
+                                if index > 0
+                                    && index == self.unsplash.photos.count
+                                        - 2
+                                {
+                                    print(
+                                        "Reached the end! Fetching more photos..."
+                                    )
+                                    self.unsplash.fetchNextBatch()
+                                }
+                            }
+                    }
+
                 }
-                .aspectRatio(contentMode: .fit)
-                .frame(maxWidth: .infinity)
-                .clipShape(.rect(cornerRadius: 25))
-                Text("Fetched photo: \(photo.user.name)")
-            } else {
-                Text("Loading...")
+
             }
-            
-            Button(
-                action: {
-                    unsplash.nextPhoto()
-                },
-                label: {
-                    Text("Fetch Photo")
-                }
+            .background(.black)
+            .scrollIndicators(.hidden)
+            .scrollTargetBehavior(.paging)
+            .ignoresSafeArea()
 
-            ).buttonStyle(.borderedProminent)
-
+            // if !unsplash.isFetching {
+            //    LoadingBadgeView()
+            //        .transition(.opacity)
+            // }
         }
     }
 }
 
-#Preview {
-    ContentView()
+struct LoadingBadgeView: View {
+    @State var offset: CGFloat = 0
+
+    var body: some View {
+        Text("Loading new photos...")
+            .font(.system(size: 10, weight: .bold))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(.white)
+            .foregroundColor(.black)
+            .cornerRadius(16)
+    }
 }

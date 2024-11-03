@@ -18,10 +18,15 @@ class UnsplashAPI {
     }
 
     func fetchRandomPhoto(count: Int = 15) async throws -> [Photo] {
-        guard let url = URL(string: "\(UNSPLASH_BASE_URL)/photos/random?count=\(count)&orientation=portrait") else {
+        guard
+            let url = URL(
+                string:
+                    "\(UNSPLASH_BASE_URL)/photos/random?count=\(count)&orientation=portrait"
+            )
+        else {
             throw UnsplashError.invalidURL
         }
-        
+
         print("Fetching random photos from Unsplash... \(url.absoluteString)")
 
         var request = URLRequest(url: url)
@@ -31,7 +36,7 @@ class UnsplashAPI {
                 "Client-ID \(UnsplashAuth.accessKey)",
                 forHTTPHeaderField: "Authorization"
             )
-        
+
         let (data, response) = try await URLSession.shared.data(for: request)
 
         guard

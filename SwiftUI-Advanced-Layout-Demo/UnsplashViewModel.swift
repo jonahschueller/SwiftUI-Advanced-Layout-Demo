@@ -3,18 +3,19 @@ import SwiftUI
 @Observable
 class UnsplashViewModel {
     
-    var currentPhoto: Photo? {
-        return photos.first
-    }
     var photos: [Photo] = []
+    
+    var isFetching: Bool = false
     
     init() {
         fetchNextBatch()
     }
     
-    private func fetchNextBatch() {
+    func fetchNextBatch() {
         Task {
             do {
+                isFetching = true
+                
                 let response = try await UnsplashAPI.shared.fetchRandomPhoto()
                 
                 print("Loaded \(response.count) photos")
@@ -23,15 +24,9 @@ class UnsplashViewModel {
             } catch {
                 print(error )
             }
+            
+            isFetching = false
         }
-    }
-    
-    func nextPhoto() {
-        if (photos.count < 3) {
-            fetchNextBatch()
-        }
-        
-        photos.removeFirst()
     }
     
 }
