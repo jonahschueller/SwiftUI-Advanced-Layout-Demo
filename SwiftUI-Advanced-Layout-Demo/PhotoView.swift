@@ -15,53 +15,58 @@ struct PhotoView: View {
 
     @State var isExpanded: Bool = false
 
-    @State var expansionWidth = CGFloat.zero
-    @State var expansionHeight = CGFloat.zero
+    @State private var modalOffset: CGFloat = 0  // Offset for the modal position
+    @State private var dragOffset: CGFloat = 0  // Offset during drag gesture
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            AsyncImage(url: URL(string: photo.urls.regular)) { image in
-                image
-                    .resizable()
-                    .scaledToFill()
-            } placeholder: {
-                Color.black
-            }
-            .frame(
-                width: UIScreen.main.bounds.width,
-                height: UIScreen.main.bounds.height)
+        GeometryReader { pageSize in
+            let pageHeight = pageSize.size.height
 
-            VStack(alignment: .leading) {
-                HStack(alignment: .center) {
-                    Text(
-                        photo.user.name
-                    )
-                    .font(.system(size: 20, weight: .semibold))
-                    .lineLimit(1)
+            let modalHeight = pageHeight * 0.75
 
-                    Spacer(minLength: 10)
+            let collapsedOffset = modalHeight * 0.75
+            let expandedOffset = modalHeight * 0.05
 
-                    Button(
-                        "",
-                        systemImage: "chevron.down.circle.fill"
-                    ) {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            self.isExpanded.toggle()
-                        }
-                    }
-                    .rotationEffect(
-                        .degrees(
-                            self.isExpanded ? 180 : 0
+            ZStack(alignment: .bottom) {
+                AsyncImage(url: URL(string: photo.urls.regular)) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .frame(
+                            width: pageSize.size.width,
+                            height: pageSize.size.height
                         )
-                    )
-                    .font(.system(.title)).layoutPriority(1)
-
+                        .clipped()
+                } placeholder: {
+                    Color.black
                 }
+                
+                
 
-                if isExpanded {
+                VStack(alignment: .leading, spacing: 5) {
+
+                    HStack {
+                        Spacer()
+                        Capsule()
+                            .frame(width: 35, height: 5)
+                        Spacer()
+                    }
+
+                    HStack {
+                      
+                        
+                        Text(
+                            photo.user.name
+                        )
+                        .font(.system(size: 24, weight: .semibold))
+                        .lineLimit(1)
+
+                        Spacer()
+                    }.padding(.bottom)
 
                     if let bio = photo.user.bio {
                         Text(bio)
+                            .font(.system(size: 16, weight: .regular))
                             .lineLimit(3)
                     }
 
@@ -70,78 +75,82 @@ struct PhotoView: View {
                             .font(.caption)
                     }
 
+                    Spacer(minLength: expandedOffset)
+                }
+                .padding()
+                .frame(
+                    width: pageSize.size.width,
+                    height: modalHeight
+                )
+                .background(.thinMaterial)
+                .cornerRadius(16)
+                .offset()
+                .shadow(radius: 10)
+                .offset(y: max(0, modalOffset + dragOffset))
+                .gesture(
+                    DragGesture()
+                        .onChanged { gesture in
+                            // Calculate new position with drag
+                            let newOffset =
+                                modalOffset + gesture.translation.height
+
+                            // Limit the offset to the closed and open positions
+                            if newOffset >= 0 {
+                                dragOffset = gesture.translation.height
+                            }
+                        }
+                        .onEnded { gesture in
+                            // Update modalOffset and reset dragOffset
+                            modalOffset += dragOffset
+                            dragOffset = 0
+
+                            let predictedOffset = gesture
+                                .predictedEndTranslation.height
+                            let predictedNewOffset =
+                                modalOffset + predictedOffset
+
+                            // Snap to open or closed position
+                            let snapThreshold =
+                                (collapsedOffset - expandedOffset) / 2
+                            withAnimation(.spring(duration: 0.25)) {
+                                if predictedNewOffset < snapThreshold {
+                                    modalOffset = expandedOffset
+                                } else {
+                                    modalOffset = collapsedOffset
+                                }
+                            }
+                        }
+                )
+                .onAppear {
+                    // Initial collapsed position
+                    modalOffset = collapsedOffset
                 }
 
-                Spacer()
-            }
-            .padding()
-            .frame(
-                width: expansionWidth,
-                height:
-                    getPercentageOfScreenHeight(isExpanded ? 0.5 : 0.1)
-
+            }.frame(
+                width: pageSize.size.width, height: pageSize.size.height
             )
-            .background(Color(UIColor.secondarySystemBackground))
-            .clipShape(
-                .rect(
-                    topLeadingRadius: 20,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: 20
-                )
-            )
-            .clipped()
-        }.background(
-            GeometryReader {
-                Color.clear.preference(
-                    key: ViewHeightKey.self,
-                    value: $0.frame(in: .local).size.height
-                )
-                .preference(
-                    key: ViewWidthKey.self,
-                    value: $0.frame(in: .local).size.width
-                )
-            }
-        )
-        .onPreferenceChange(
-            ViewWidthKey.self,
-            perform: { value in
-                print(
-                    "Expansion \(value), Screen \(UIScreen.main.bounds.width)"
-                )
-                expansionWidth = value
-            }
-        )
-        .onPreferenceChange(
-            ViewHeightKey.self,
-            perform: { value in
-                print(value)
-                expansionHeight = value
-            })
-
-    }
-
-    func getPercentageOfScreenHeight(_ percentage: CGFloat) -> CGFloat {
-        return expansionHeight * percentage
-    }
-
-    func dateFromString(_ string: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-
-        print(string)
-
-        guard let date = formatter.date(from: string) else {
-            return "TODO: Figure out the format"
         }
+    }
 
-        let formatter2 = DateFormatter()
-        formatter2.dateStyle = .medium
-        return formatter2.string(from: date)
+    func dateFromString(_ dateString: String) -> String {
+        let inputFormatter = DateFormatter()
+        inputFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+
+        if let date = inputFormatter.date(from: dateString) {
+            let outputFormatter = DateFormatter()
+            outputFormatter.dateStyle = .medium  // Medium style like "Nov 4, 2023"
+            outputFormatter.timeStyle = .short
+
+            let readableDate = outputFormatter.string(from: date)
+
+            return readableDate
+        } else {
+            return "-"
+        }
     }
 }
 
-struct ViewWidthKey: PreferenceKey {
+struct NameTextSize: PreferenceKey {
     static var defaultValue: CGFloat { 0 }
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value = value + nextValue()

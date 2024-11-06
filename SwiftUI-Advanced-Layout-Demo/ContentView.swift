@@ -13,33 +13,34 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(
-                        Array(unsplash.photos.enumerated()),
-                        id: \.offset
-                    ) { index, item in
-                        PhotoView(unsplash: unsplash, photo: item)
-                            .frame(
-                                width: UIScreen.main.bounds.width,
-                                height: UIScreen.main.bounds.height
-                            )
-                            .onAppear {
-                                // Get new photos while scrolling
-                                if index > 0
-                                    && index == self.unsplash.photos.count
-                                        - 2
-                                {
-                                    print(
-                                        "Reached the end! Fetching more photos..."
-                                    )
-                                    self.unsplash.fetchNextBatch()
+            GeometryReader { screen in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+
+                        ForEach(
+                            Array(unsplash.photos.enumerated()),
+                            id: \.offset
+                        ) { index, item in
+                            PhotoView(unsplash: unsplash, photo: item)
+                                .frame(
+                                    width: screen.size.width,
+                                    height: screen.size.height
+                                )
+                                .onAppear {
+                                    // Get new photos while scrolling
+                                    if index > 0
+                                        && index == self.unsplash.photos.count
+                                            - 2
+                                    {
+                                        print(
+                                            "Reached the end! Fetching more photos..."
+                                        )
+                                        self.unsplash.fetchNextBatch()
+                                    }
                                 }
-                            }
+                        }
                     }
-
                 }
-
             }
             .background(.black)
             .scrollIndicators(.hidden)
