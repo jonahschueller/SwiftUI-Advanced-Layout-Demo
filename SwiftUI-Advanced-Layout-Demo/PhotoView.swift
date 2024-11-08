@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+let OFFSET_X: CGFloat = 32
+let OFFSET_Y: CGFloat = 32
+
 struct PhotoView: View {
 
     var unsplash: UnsplashViewModel
@@ -18,16 +21,14 @@ struct PhotoView: View {
     @State private var modalOffset: CGFloat = 0  // Offset for the modal position
     @State private var dragOffset: CGFloat = 0  // Offset during drag gesture
 
+    @State private var nameTextSize: CGSize = .zero
+
     var body: some View {
         GeometryReader { pageSize in
             let pageHeight = pageSize.size.height
-
             let modalHeight = pageHeight * 0.75
 
-            let collapsedOffset = modalHeight * 0.75
-            let expandedOffset = modalHeight * 0.05
-
-            ZStack(alignment: .bottom) {
+            ZStack(alignment: .bottomLeading) {
                 AsyncImage(url: URL(string: photo.urls.regular)) { image in
                     image
                         .resizable()
@@ -40,90 +41,78 @@ struct PhotoView: View {
                 } placeholder: {
                     Color.black
                 }
-                
-                
 
                 VStack(alignment: .leading, spacing: 5) {
-
                     HStack {
-                        Spacer()
-                        Capsule()
-                            .frame(width: 35, height: 5)
-                        Spacer()
-                    }
-
-                    HStack {
-                      
-                        
                         Text(
                             photo.user.name
                         )
-                        .font(.system(size: 24, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .lineLimit(1)
+                        .background {
+                            GeometryReader { nameText in
+                                Color.clear
+                                    .preference(
+                                        key: NameTextSize.self,
+                                        value: nameText.size
+                                    )
+                            }
+                        }.onPreferenceChange(NameTextSize.self) { size in
+                            nameTextSize = size
+                        }
 
                         Spacer()
                     }.padding(.bottom)
 
-                    if let bio = photo.user.bio {
-                        Text(bio)
-                            .font(.system(size: 16, weight: .regular))
-                            .lineLimit(3)
-                    }
+                    Group {
 
-                    HStack {
-                        Text(self.dateFromString(photo.createdAt))
-                            .font(.caption)
-                    }
+                        if let bio = photo.user.bio {
+                            Text(bio)
+                                .font(.system(size: 16, weight: .regular))
+                                .lineLimit(3)
+                        }
 
-                    Spacer(minLength: expandedOffset)
+                        HStack {
+                            Text(self.dateFromString(photo.createdAt))
+                                .font(.caption)
+                        }
+
+                    }.opacity(
+                        isExpanded ? 1.0 : 0.0
+                    )
+
+                    Spacer()
+
                 }
-                .padding()
+                .padding(16)
                 .frame(
                     width: pageSize.size.width,
-                    height: modalHeight
+                    height: pageSize.size.height
                 )
                 .background(.thinMaterial)
-                .cornerRadius(16)
-                .offset()
-                .shadow(radius: 10)
-                .offset(y: max(0, modalOffset + dragOffset))
-                .gesture(
-                    DragGesture()
-                        .onChanged { gesture in
-                            // Calculate new position with drag
-                            let newOffset =
-                                modalOffset + gesture.translation.height
-
-                            // Limit the offset to the closed and open positions
-                            if newOffset >= 0 {
-                                dragOffset = gesture.translation.height
-                            }
-                        }
-                        .onEnded { gesture in
-                            // Update modalOffset and reset dragOffset
-                            modalOffset += dragOffset
-                            dragOffset = 0
-
-                            let predictedOffset = gesture
-                                .predictedEndTranslation.height
-                            let predictedNewOffset =
-                                modalOffset + predictedOffset
-
-                            // Snap to open or closed position
-                            let snapThreshold =
-                                (collapsedOffset - expandedOffset) / 2
-                            withAnimation(.spring(duration: 0.25)) {
-                                if predictedNewOffset < snapThreshold {
-                                    modalOffset = expandedOffset
-                                } else {
-                                    modalOffset = collapsedOffset
-                                }
-                            }
-                        }
+                .frame(
+                    width: isExpanded
+                        ? pageSize.size.width
+                        : min(
+                            nameTextSize.width + OFFSET_X,  // Preferred fitting size
+                            pageSize.size.width - 2 * OFFSET_X  // Maximum available size
+                        ),
+                    height: isExpanded
+                        ? modalHeight : nameTextSize.height + OFFSET_Y,
+                    alignment: .topLeading
                 )
-                .onAppear {
-                    // Initial collapsed position
-                    modalOffset = collapsedOffset
+                .clipShape(
+                    RoundedRectangle(cornerRadius: nameTextSize.height)
+                )
+                .offset(
+                    x: isExpanded ? 0 : OFFSET_X,
+                    y: isExpanded ? 0 : -OFFSET_Y
+                )
+                .onTapGesture {
+
+                    withAnimation(.spring(duration: 0.4, bounce: 0.25)) {
+                        isExpanded.toggle()
+                    }
                 }
 
             }.frame(
@@ -151,9 +140,9 @@ struct PhotoView: View {
 }
 
 struct NameTextSize: PreferenceKey {
-    static var defaultValue: CGFloat { 0 }
+    static var defaultValue: CGSize { .zero }
     static func reduce(value: inout Value, nextValue: () -> Value) {
-        value = value + nextValue()
+        value = nextValue()
     }
 }
 

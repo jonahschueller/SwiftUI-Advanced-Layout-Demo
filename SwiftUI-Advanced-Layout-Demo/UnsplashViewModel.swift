@@ -7,6 +7,8 @@ class UnsplashViewModel {
     
     var isFetching: Bool = false
     
+    var hasError: Bool = false
+    
     init() {
         fetchNextBatch()
     }
@@ -21,8 +23,12 @@ class UnsplashViewModel {
                 print("Loaded \(response.count) photos")
                 
                 self.photos.append(contentsOf: response)
+                
+                hasError = false
             } catch {
                 print(error )
+                
+                hasError = true
             }
             
             isFetching = false
