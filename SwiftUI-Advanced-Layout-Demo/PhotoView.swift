@@ -10,26 +10,22 @@ import SwiftUI
 let OFFSET_X: CGFloat = 32
 let OFFSET_Y: CGFloat = 32
 
-struct PhotoView: View {
+let PADDING: CGFloat = 16
 
-    var unsplash: UnsplashViewModel
+struct PhotoView: View {
 
     var photo: Photo
 
     @State var isExpanded: Bool = false
-
-    @State private var modalOffset: CGFloat = 0  // Offset for the modal position
-    @State private var dragOffset: CGFloat = 0  // Offset during drag gesture
-
     @State private var nameTextSize: CGSize = .zero
 
     var body: some View {
         GeometryReader { pageSize in
-            let pageHeight = pageSize.size.height
-            let modalHeight = pageHeight * 0.75
+            let MODAL_WIDTH = pageSize.size.width - OFFSET_X * 2
+            let MODAL_WIDTH_INNER = MODAL_WIDTH - PADDING * 2  // With padding
 
-            ZStack(alignment: .bottomLeading) {
-                AsyncImage(url: URL(string: photo.urls.regular)) { image in
+            ZStack(alignment: isExpanded ? .center : .bottomLeading) {
+                AsyncImage(url: URL(string: photo.urls.full)) { image in
                     image
                         .resizable()
                         .scaledToFill()
@@ -43,12 +39,10 @@ struct PhotoView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 5) {
-                    HStack {
-                        Text(
-                            photo.user.name
-                        )
+                    Text(photo.user.name)
                         .font(.system(size: 16, weight: .semibold))
                         .lineLimit(1)
+                        .fixedSize()
                         .background {
                             GeometryReader { nameText in
                                 Color.clear
@@ -59,48 +53,47 @@ struct PhotoView: View {
                             }
                         }.onPreferenceChange(NameTextSize.self) { size in
                             nameTextSize = size
+
+                            print("Name Text Size: \(size)")
                         }
 
+                    
+                    Text(photo.user.bio ?? "No Bio")
+                        .font(.system(size: 12, weight: .medium))
+                            .opacity(photo.user.bio == nil ? 0.75 : 1)
+                            .lineLimit(5)
+                            .frame(
+                                width: MODAL_WIDTH_INNER,
+                                alignment: .leading
+                            )
+                            .fixedSize()
+                            .opacity(isExpanded ? 1 : 0)
+                    
+
+                    Text(photo.createdAt.dateFromString())
+                        .font(.caption)
+                        .frame(width: MODAL_WIDTH_INNER,
+                               alignment: .leading)
+                        .fixedSize()
+                        .opacity(isExpanded ? 1 : 0)
+
+                    if isExpanded {
                         Spacer()
-                    }.padding(.bottom)
-
-                    Group {
-
-                        if let bio = photo.user.bio {
-                            Text(bio)
-                                .font(.system(size: 16, weight: .regular))
-                                .lineLimit(3)
-                        }
-
-                        HStack {
-                            Text(self.dateFromString(photo.createdAt))
-                                .font(.caption)
-                        }
-
-                    }.opacity(
-                        isExpanded ? 1.0 : 0.0
-                    )
-
-                    Spacer()
+                    }
 
                 }
-                .padding(16)
+                .padding(PADDING)
                 .frame(
-                    width: pageSize.size.width,
-                    height: pageSize.size.height
-                )
-                .background(.thinMaterial)
-                .frame(
-                    width: isExpanded
-                        ? pageSize.size.width
-                        : min(
-                            nameTextSize.width + OFFSET_X,  // Preferred fitting size
-                            pageSize.size.width - 2 * OFFSET_X  // Maximum available size
-                        ),
-                    height: isExpanded
-                        ? modalHeight : nameTextSize.height + OFFSET_Y,
+                    minWidth: isExpanded
+                        ? MODAL_WIDTH : 0,
+                    maxWidth: isExpanded
+                        ? MODAL_WIDTH : nameTextSize.width + 2 * PADDING,
+                    maxHeight: isExpanded
+                        ? pageSize.size.height * 0.7
+                        : nameTextSize.height + 2 * PADDING,
                     alignment: .topLeading
                 )
+                .background(.thinMaterial)
                 .clipShape(
                     RoundedRectangle(cornerRadius: nameTextSize.height)
                 )
@@ -109,32 +102,13 @@ struct PhotoView: View {
                     y: isExpanded ? 0 : -OFFSET_Y
                 )
                 .onTapGesture {
-
-                    withAnimation(.spring(duration: 0.4, bounce: 0.25)) {
+                    withAnimation(.spring(duration: 2, bounce: 0.25)) {
                         isExpanded.toggle()
                     }
                 }
-
             }.frame(
                 width: pageSize.size.width, height: pageSize.size.height
             )
-        }
-    }
-
-    func dateFromString(_ dateString: String) -> String {
-        let inputFormatter = DateFormatter()
-        inputFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-
-        if let date = inputFormatter.date(from: dateString) {
-            let outputFormatter = DateFormatter()
-            outputFormatter.dateStyle = .medium  // Medium style like "Nov 4, 2023"
-            outputFormatter.timeStyle = .short
-
-            let readableDate = outputFormatter.string(from: date)
-
-            return readableDate
-        } else {
-            return "-"
         }
     }
 }
@@ -143,12 +117,5 @@ struct NameTextSize: PreferenceKey {
     static var defaultValue: CGSize { .zero }
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value = nextValue()
-    }
-}
-
-struct ViewHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat { 0 }
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value = value + nextValue()
     }
 }

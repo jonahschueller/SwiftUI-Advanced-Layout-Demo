@@ -57,7 +57,7 @@ struct Position: Codable {
     let longitude: Double
 }
 
-struct Urls: Codable {
+struct Urls: Codable, Hashable {
     let raw: String
     let full: String
     let regular: String
