@@ -8,6 +8,8 @@
 import MapKit
 import SwiftUI
 
+let ANIMATION_DURATION: CGFloat = 2
+
 let OFFSET_X: CGFloat = 32
 let OFFSET_Y: CGFloat = 32
 
@@ -23,6 +25,8 @@ struct NameTextSize: PreferenceKey {
 struct PhotoView: View {
 
     var photo: Photo
+    
+    @Binding var scrollingEnabled: Bool
 
     @State var isExpanded: Bool = false
     @State private var nameTextSize: CGSize = .zero
@@ -128,8 +132,9 @@ struct PhotoView: View {
                     y: isExpanded ? 0 : -OFFSET_Y
                 )
                 .onTapGesture {
-                    withAnimation(.spring(duration: 0.4, bounce: 0.25)) {
+                    withAnimation(.spring(duration: ANIMATION_DURATION, bounce: 0.25)) {
                         isExpanded.toggle()
+                        scrollingEnabled = !isExpanded
                     }
                 }
             }.frame(
