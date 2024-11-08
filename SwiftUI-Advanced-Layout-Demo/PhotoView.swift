@@ -25,7 +25,7 @@ struct NameTextSize: PreferenceKey {
 struct PhotoView: View {
 
     var photo: Photo
-    
+
     @Binding var scrollingEnabled: Bool
 
     @State var isExpanded: Bool = false
@@ -132,7 +132,12 @@ struct PhotoView: View {
                     y: isExpanded ? 0 : -OFFSET_Y
                 )
                 .onTapGesture {
-                    withAnimation(.spring(duration: ANIMATION_DURATION, bounce: 0.25)) {
+                    let impactMed = UIImpactFeedbackGenerator(style: .heavy)
+                    impactMed.impactOccurred()
+
+                    withAnimation(
+                        .spring(duration: ANIMATION_DURATION, bounce: 0.25)
+                    ) {
                         isExpanded.toggle()
                         scrollingEnabled = !isExpanded
                     }
