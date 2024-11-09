@@ -15,46 +15,46 @@ struct ContentView: View {
     @State private var scrollingEnabled: Bool = true
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            GeometryReader { screen in
-                ScrollView {
-                    LazyVStack(spacing: 0) {
+        GeometryReader { screen in
+            ScrollView {
+                LazyVStack(spacing: 0) {
 
-                        ForEach(
-                            Array(unsplash.photos.enumerated()),
-                            id: \.offset
-                        ) {
-                            index,
-                            item in
-                            PhotoView(
-                                photo: item,
-                                scrollingEnabled: $scrollingEnabled
-                            )
-                            .frame(
-                                width: screen.size.width,
-                                height: screen.size.height
-                            )
-                            .onAppear {
-                                // Get new photos while scrolling
-                                if index > 0
-                                    && index == self.unsplash.photos.count
-                                        - 2
-                                {
-                                    print(
-                                        "Reached the end! Fetching more photos..."
-                                    )
-                                    self.unsplash.fetchNextBatch()
-                                }
+                    ForEach(
+                        Array(unsplash.photos.enumerated()),
+                        id: \.offset
+                    ) {
+                        index,
+                        item in
+                        PhotoView(
+                            photo: item,
+                            scrollingEnabled: $scrollingEnabled
+                        )
+                        .frame(
+                            width: screen.size.width,
+                            height: screen.size.height
+                        )
+                        .onAppear {
+                            // Get new photos while scrolling
+                            if index > 0
+                                && index == self.unsplash.photos.count
+                                    - 2
+                            {
+                                print(
+                                    "Reached the end! Fetching more photos..."
+                                )
+                                self.unsplash.fetchNextBatch()
                             }
                         }
                     }
                 }
             }
-            .background(.black)
-            .scrollDisabled(!scrollingEnabled)
-            .scrollIndicators(.hidden)
-            .scrollTargetBehavior(.paging)
-            .ignoresSafeArea()
         }
+        .background(.black)
+        .scrollDisabled(!scrollingEnabled)
+        .scrollIndicators(.hidden)
+        .scrollTargetBehavior(.paging)
+        .ignoresSafeArea()
     }
+
 }
+

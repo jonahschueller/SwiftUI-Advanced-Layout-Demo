@@ -110,6 +110,26 @@ struct PhotoView: View {
                     .opacity(isExpanded ? 1 : 0)
 
                     Spacer()
+                    
+                    HStack(spacing: 20){
+                        HStack(spacing: 5){
+                            Image(systemName: "heart.fill")
+                            Text("\(photo.likes)")
+                        }
+                        HStack(spacing: 5){
+                            Image(systemName: "square.and.arrow.down.fill")
+                            if let downloads = photo.downloads {
+                                Text("\(downloads)")
+                            }
+                        }
+                    }
+                    .font(.system(size: 16, weight: .medium))
+                    .frame(
+                        width: MODAL_WIDTH_INNER,
+                        alignment: .bottom
+                    )
+                    .fixedSize()
+                    .opacity(isExpanded ? 1 : 0)
 
                 }
                 .padding(PADDING)
