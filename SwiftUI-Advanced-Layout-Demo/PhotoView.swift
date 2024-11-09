@@ -8,8 +8,6 @@
 import MapKit
 import SwiftUI
 
-let ANIMATION_DURATION: CGFloat = 2
-
 let OFFSET_X: CGFloat = 32
 let OFFSET_Y: CGFloat = 32
 
@@ -24,6 +22,8 @@ struct NameTextSize: PreferenceKey {
 
 struct PhotoView: View {
 
+    @Environment(\.animationSpeed) var animationSpeed
+    
     var photo: Photo
 
     @Binding var scrollingEnabled: Bool
@@ -110,23 +110,22 @@ struct PhotoView: View {
                     .opacity(isExpanded ? 1 : 0)
 
                     Spacer()
-                    
-                    HStack(spacing: 20){
-                        HStack(spacing: 5){
+
+                    HStack(spacing: 20) {
+                        HStack(spacing: 5) {
                             Image(systemName: "heart.fill")
                             Text("\(photo.likes)")
                         }
-                        HStack(spacing: 5){
-                            Image(systemName: "square.and.arrow.down.fill")
-                            if let downloads = photo.downloads {
+                        if let downloads = photo.downloads {
+                            HStack(spacing: 5) {
+                                Image(systemName: "square.and.arrow.down.fill")
                                 Text("\(downloads)")
                             }
                         }
                     }
                     .font(.system(size: 16, weight: .medium))
                     .frame(
-                        width: MODAL_WIDTH_INNER,
-                        alignment: .bottom
+                        width: MODAL_WIDTH_INNER
                     )
                     .fixedSize()
                     .opacity(isExpanded ? 1 : 0)
@@ -151,17 +150,17 @@ struct PhotoView: View {
                     x: isExpanded ? 0 : OFFSET_X,
                     y: isExpanded ? 0 : -OFFSET_Y
                 )
-                .onTapGesture {
+                .simultaneousGesture(TapGesture().onEnded { _ in
                     let impactMed = UIImpactFeedbackGenerator(style: .heavy)
                     impactMed.impactOccurred()
 
                     withAnimation(
-                        .spring(duration: ANIMATION_DURATION, bounce: 0.25)
+                        .spring(duration: animationSpeed, bounce: 0.25)
                     ) {
                         isExpanded.toggle()
                         scrollingEnabled = !isExpanded
                     }
-                }
+                })
             }.frame(
                 width: pageSize.size.width, height: pageSize.size.height
             )
@@ -217,10 +216,12 @@ struct PhotoMapLocation: View {
     var body: some View {
         Map(
             bounds: MapCameraBounds(
-                centerCoordinateBounds: MKCoordinateRegion(
-                    center: coordinate,
-                    span: MKCoordinateSpan(
-                        latitudeDelta: 1000, longitudeDelta: 1000)))
+                centerCoordinateBounds: MKMapRect(
+                    origin: MKMapPoint(coordinate),
+                    size: MKMapSize(width: 1, height: 1)
+                ),
+                minimumDistance: 10000
+            )
         ) {
             Marker("Photo Location", coordinate: coordinate)
                 .tint(.red)
