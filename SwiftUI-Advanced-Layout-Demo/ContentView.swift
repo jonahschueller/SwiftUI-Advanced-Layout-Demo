@@ -20,7 +20,7 @@ struct ContentView: View {
     @State private var scrollingEnabled: Bool = true
 
     @State private var animationSpeed = AnimationSpeed.fast
-    @State private var animationSpeedDidChange: Bool = false
+    @State private var workItem: DispatchWorkItem?
 
     var body: some View {
         ZStack {
@@ -70,7 +70,7 @@ struct ContentView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .background(.thinMaterial)
                 .cornerRadius(32)
-                .opacity(animationSpeedDidChange ? 1 : 0)
+                .opacity(workItem != nil ? 1 : 0)
 
         }
         .onTapGesture(
@@ -86,10 +86,6 @@ struct ContentView: View {
     }
 
     func toggleAnimationSpeed() {
-        if animationSpeedDidChange {
-            return
-        }
-        
         let impactMed = UIImpactFeedbackGenerator(style: .heavy)
         impactMed.impactOccurred()
 
@@ -99,12 +95,17 @@ struct ContentView: View {
             } else {
                 animationSpeed = .fast
             }
-            animationSpeedDidChange.toggle()
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+        
+        workItem?.cancel()
+        workItem = DispatchWorkItem {
             withAnimation {
-                self.animationSpeedDidChange.toggle()
+                self.workItem = nil
             }
+        }
+        
+        if let workItem = workItem {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: workItem)
         }
     }
 }
