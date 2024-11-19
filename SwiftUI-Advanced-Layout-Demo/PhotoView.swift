@@ -111,6 +111,7 @@ struct PhotoView: View {
 
                     Spacer()
 
+                    
                     HStack(spacing: 20) {
                         HStack(spacing: 5) {
                             Image(systemName: "heart.fill")
@@ -174,7 +175,7 @@ struct UnsplashAsyncImage: View {
     let size: CGSize
 
     var body: some View {
-        AsyncImage(url: URL(string: photo.urls.full)) { image in
+        AsyncImage(url: URL(string: photo.urls.regular)) { image in
             image
                 .resizable()
                 .scaledToFill()
@@ -184,7 +185,7 @@ struct UnsplashAsyncImage: View {
                 )
                 .clipped()
         } placeholder: {
-            AsyncImage(url: URL(string: photo.urls.small)) { image in
+            AsyncImage(url: URL(string: photo.urls.thumb)) { image in
                 image
                     .resizable()
                     .scaledToFill()

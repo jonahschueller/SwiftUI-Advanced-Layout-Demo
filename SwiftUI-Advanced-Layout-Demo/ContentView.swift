@@ -9,19 +9,22 @@ import SwiftUI
 
 enum AnimationSpeed: CGFloat {
     case slow = 5
-    case fast = 0.4
+    case fast = 0.5
 }
 
 struct ContentView: View {
 
     @State private var unsplash = UnsplashViewModel()
-    @State private var scrollOffset: CGFloat = 0
-
+    
     @State private var scrollingEnabled: Bool = true
 
     @State private var animationSpeed = AnimationSpeed.fast
     @State private var workItem: DispatchWorkItem?
 
+    private var showAnimationspeedIndicator: Bool {
+        workItem != nil
+    }
+    
     var body: some View {
         ZStack {
             GeometryReader { screen in
@@ -57,6 +60,9 @@ struct ContentView: View {
                         }
                     }
                 }
+                .scrollDisabled(!scrollingEnabled)
+                .scrollIndicators(.hidden)
+                .scrollTargetBehavior(.paging)
             }
 
             HStack {
@@ -67,20 +73,25 @@ struct ContentView: View {
 
                 Text(animationSpeed == .fast ? "Fast" : "Slow")
             }.padding()
+                .frame(width: 110)
                 .font(.system(size: 16, weight: .semibold))
                 .background(.thinMaterial)
                 .cornerRadius(32)
-                .opacity(workItem != nil ? 1 : 0)
+                .opacity(showAnimationspeedIndicator ? 1 : 0)
 
         }
         .onTapGesture(
             count: 2,
             perform: self.toggleAnimationSpeed
-        )
+        ).onChange(of: scrollingEnabled, { oldValue, newValue in
+            if let workItem = self.workItem, !newValue {
+                workItem.cancel()
+                withAnimation {
+                    self.workItem = nil
+                }
+            }
+        })
         .background(.black)
-        .scrollDisabled(!scrollingEnabled)
-        .scrollIndicators(.hidden)
-        .scrollTargetBehavior(.paging)
         .ignoresSafeArea()
         .environment(\.animationSpeed, animationSpeed.rawValue)
     }
@@ -105,7 +116,7 @@ struct ContentView: View {
         }
         
         if let workItem = workItem {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: workItem)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: workItem)
         }
     }
 }
