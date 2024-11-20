@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F183F362CEC88C4003F61BD /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 4F183F352CEC88BF003F61BD /* README.md */; };
 		4F912DE02CD0C3B4005EFE34 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 4F912DDF2CD0C3AC005EFE34 /* .gitignore */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4F183F352CEC88BF003F61BD /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		4F912DB02CD0C164005EFE34 /* SwiftUI-Advanced-Layout-Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftUI-Advanced-Layout-Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F912DC02CD0C165005EFE34 /* SwiftUI-Advanced-Layout-DemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SwiftUI-Advanced-Layout-DemoTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F912DCA2CD0C165005EFE34 /* SwiftUI-Advanced-Layout-DemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SwiftUI-Advanced-Layout-DemoUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -80,6 +82,7 @@
 		4F912DA72CD0C164005EFE34 = {
 			isa = PBXGroup;
 			children = (
+				4F183F352CEC88BF003F61BD /* README.md */,
 				4F912DDF2CD0C3AC005EFE34 /* .gitignore */,
 				4F912DB22CD0C164005EFE34 /* SwiftUI-Advanced-Layout-Demo */,
 				4F912DC32CD0C165005EFE34 /* SwiftUI-Advanced-Layout-DemoTests */,
@@ -218,6 +221,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F183F362CEC88C4003F61BD /* README.md in Resources */,
 				4F912DE02CD0C3B4005EFE34 /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

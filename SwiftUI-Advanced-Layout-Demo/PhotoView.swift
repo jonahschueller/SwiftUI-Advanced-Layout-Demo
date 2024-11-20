@@ -23,7 +23,7 @@ struct NameTextSize: PreferenceKey {
 struct PhotoView: View {
 
     @Environment(\.animationSpeed) var animationSpeed
-    
+
     var photo: Photo
 
     @Binding var scrollingEnabled: Bool
@@ -33,8 +33,10 @@ struct PhotoView: View {
 
     var body: some View {
         GeometryReader { pageSize in
+            // Width of expanded modal
             let MODAL_WIDTH = pageSize.size.width - OFFSET_X * 2
-            let MODAL_WIDTH_INNER = MODAL_WIDTH - PADDING * 2  // With padding
+            // Inner Width of expanded modal (including the padding)
+            let MODAL_WIDTH_INNER = MODAL_WIDTH - PADDING * 2
 
             ZStack(alignment: isExpanded ? .center : .bottomLeading) {
                 UnsplashAsyncImage(photo: photo, size: pageSize.size)
@@ -57,79 +59,23 @@ struct PhotoView: View {
                             nameTextSize = size
                         }
 
-                    // Content that will appear on expanded view
-                    Group {
-                        // Mark: Bio
-                        Text(photo.user.bio ?? "No Bio")
-                            .font(.system(size: 14, weight: .medium))
-                            .opacity(photo.user.bio == nil ? 0.75 : 1)
-                            .lineLimit(5)
-
-                        Text(photo.createdAt.dateFromString())
-                            .font(.caption)
-
-                        // Mark: Socials
-                        if photo.user.instagramUsername != nil
-                            || photo.user.twitterUsername != nil
-                        {
-                            Text("Socials")
-                                .font(.system(size: 16, weight: .semibold))
-                                .lineLimit(1)
-                                .padding(.top)
-                        }
-
-                        if let instagram = photo.user.instagramUsername {
-                            Text("Instagram: @\(instagram)")
-                                .font(.system(size: 14, weight: .medium))
-                        }
-
-                        if let twitter = photo.user.twitterUsername {
-                            Text("Twitter: @\(twitter)")
-                                .font(.system(size: 14, weight: .medium))
-                        }
-
-                        // Mark: Map
-                        if let location = photo.location,
-                            location.position.latitude != 0,
-                            location.position.longitude != 0
-                        {
-                            Text("Location")
-                                .font(.system(size: 16, weight: .semibold))
-                                .lineLimit(1)
-                                .padding(.top)
-
-                            PhotoMapLocation(photo: photo)
-                                .frame(width: MODAL_WIDTH_INNER, height: 150)
-                        }
-                    }
-                    .frame(
-                        width: MODAL_WIDTH_INNER,
-                        alignment: .leading
-                    )
-                    .fixedSize()
-                    .opacity(isExpanded ? 1 : 0)
+                    // MARK: Content that will appear on expanded view
+                    ModalContentView(photo: photo)
+                        .frame(
+                            width: MODAL_WIDTH_INNER,
+                            alignment: .leading
+                        )
+                        .fixedSize()
+                        .opacity(isExpanded ? 1 : 0)
 
                     Spacer()
 
-                    
-                    HStack(spacing: 20) {
-                        HStack(spacing: 5) {
-                            Image(systemName: "heart.fill")
-                            Text("\(photo.likes)")
-                        }
-                        if let downloads = photo.downloads {
-                            HStack(spacing: 5) {
-                                Image(systemName: "square.and.arrow.down.fill")
-                                Text("\(downloads)")
-                            }
-                        }
-                    }
-                    .font(.system(size: 16, weight: .medium))
-                    .frame(
-                        width: MODAL_WIDTH_INNER
-                    )
-                    .fixedSize()
-                    .opacity(isExpanded ? 1 : 0)
+                    PhotoStatisticsView(photo: photo)
+                        .frame(
+                            width: MODAL_WIDTH_INNER
+                        )
+                        .fixedSize()
+                        .opacity(isExpanded ? 1 : 0)
 
                 }
                 .padding(PADDING)
@@ -151,20 +97,23 @@ struct PhotoView: View {
                     x: isExpanded ? 0 : OFFSET_X,
                     y: isExpanded ? 0 : -OFFSET_Y
                 )
-                .simultaneousGesture(TapGesture().onEnded { _ in
-                    let impactMed = UIImpactFeedbackGenerator(style: .heavy)
-                    impactMed.impactOccurred()
-
-                    withAnimation(
-                        .spring(duration: animationSpeed, bounce: 0.25)
-                    ) {
-                        isExpanded.toggle()
-                        scrollingEnabled = !isExpanded
-                    }
-                })
+                .simultaneousGesture(
+                    TapGesture().onEnded(handleModalToggle))
             }.frame(
                 width: pageSize.size.width, height: pageSize.size.height
             )
+        }
+    }
+
+    func handleModalToggle() {
+        let impactMed = UIImpactFeedbackGenerator(style: .heavy)
+        impactMed.impactOccurred()
+
+        withAnimation(
+            .spring(duration: animationSpeed, bounce: 0.25)
+        ) {
+            isExpanded.toggle()
+            scrollingEnabled = !isExpanded
         }
     }
 }
@@ -203,6 +152,58 @@ struct UnsplashAsyncImage: View {
     }
 }
 
+struct ModalContentView: View {
+
+    var photo: Photo
+
+    var body: some View {
+        Group {
+            // Bio
+            Text(photo.user.bio ?? "No Bio")
+                .font(.system(size: 14, weight: .medium))
+                .opacity(photo.user.bio == nil ? 0.75 : 1)
+                .lineLimit(5)
+
+            Text(photo.createdAt.dateFromString())
+                .font(.caption)
+
+            // Socials
+            if photo.user.instagramUsername != nil
+                || photo.user.twitterUsername != nil
+            {
+                Text("Socials")
+                    .font(.system(size: 16, weight: .semibold))
+                    .lineLimit(1)
+                    .padding(.top)
+            }
+
+            if let instagram = photo.user.instagramUsername {
+                Text("Instagram: @\(instagram)")
+                    .font(.system(size: 14, weight: .medium))
+            }
+
+            if let twitter = photo.user.twitterUsername {
+                Text("Twitter: @\(twitter)")
+                    .font(.system(size: 14, weight: .medium))
+            }
+
+            // Map
+            if let location = photo.location,
+                location.position.latitude != 0,
+                location.position.longitude != 0
+            {
+                Text("Location")
+                    .font(.system(size: 16, weight: .semibold))
+                    .lineLimit(1)
+                    .padding(.top)
+
+                PhotoMapLocation(photo: photo)
+                    .frame(height: 150)
+            }
+        }
+    }
+}
+
 struct PhotoMapLocation: View {
 
     private let coordinate: CLLocationCoordinate2D
@@ -231,4 +232,24 @@ struct PhotoMapLocation: View {
         .mapControlVisibility(.hidden)
     }
 
+}
+
+struct PhotoStatisticsView: View {
+    var photo: Photo
+
+    var body: some View {
+        HStack(spacing: 20) {
+            HStack(spacing: 5) {
+                Image(systemName: "heart.fill")
+                Text("\(photo.likes)")
+            }
+            if let downloads = photo.downloads {
+                HStack(spacing: 5) {
+                    Image(systemName: "square.and.arrow.down.fill")
+                    Text("\(downloads)")
+                }
+            }
+        }
+        .font(.system(size: 16, weight: .medium))
+    }
 }
